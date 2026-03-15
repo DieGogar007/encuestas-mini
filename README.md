@@ -108,8 +108,7 @@ docker compose exec backend npx prisma db seed
 
 6. Abre la app:
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001/api
+- URL: http://localhost:3000
 
 ## Usuarios seed
 
