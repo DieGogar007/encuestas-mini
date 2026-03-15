@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f3f7ff;
+  --foreground: #0f1f46;
+  --card: #ffffff;
+  --muted: #5f6b8c;
+  --border: #c7d6f7;
+  --primary: #0038a8;
+  --primary-strong: #0a2b7a;
+  --primary-soft: #dbe8ff;
+  --accent: #22d3ee;
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(0, 56, 168, 0.2), transparent 34%),
+    radial-gradient(circle at 90% 0%, rgba(34, 211, 238, 0.2), transparent 26%),
+    linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(10px);
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #0038a8, #0e57d0);
+  color: #fff;
+}
+
+.button-primary:hover {
+  background: linear-gradient(135deg, #0a2b7a, #0038a8);
+}
+
+.soft-enter {
+  animation: soft-enter 360ms ease;
+}
+
+@keyframes soft-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
