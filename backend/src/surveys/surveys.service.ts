@@ -16,6 +16,55 @@ import {
 export class SurveysService {
   constructor(private prisma: PrismaService) {}
 
+  private assertSurveyTextFields(title?: string, description?: string) {
+    if (title !== undefined && !title.trim()) {
+      throw new BadRequestException('El título de la encuesta es obligatorio');
+    }
+
+    if (description !== undefined && !description.trim()) {
+      throw new BadRequestException('La descripción de la encuesta es obligatoria');
+    }
+  }
+
+  private normalizeQuestionOptions(options: string[] | undefined) {
+    return (options || []).map((option) => option.trim()).filter(Boolean);
+  }
+
+  private validateQuestionPayload(
+    question: { text: string; type: string; options: string[] },
+    index: number,
+  ) {
+    if (!question.text.trim()) {
+      throw new BadRequestException(`La pregunta ${index + 1} no tiene texto`);
+    }
+
+    if (question.type === 'MULTIPLE_CHOICE') {
+      const validOptions = this.normalizeQuestionOptions(question.options);
+      if (validOptions.length < 2) {
+        throw new BadRequestException(
+          `La pregunta ${index + 1} debe tener al menos dos opciones válidas`,
+        );
+      }
+      return validOptions;
+    }
+
+    return [];
+  }
+
+  private validateQuestionsOrThrow(
+    questions: Array<{ text: string; type: string; options: string[]; order?: number }> | undefined,
+  ) {
+    if (!questions || questions.length === 0) {
+      throw new BadRequestException('Debes agregar al menos una pregunta');
+    }
+
+    return questions.map((question, index) => ({
+      ...question,
+      text: question.text.trim(),
+      options: this.validateQuestionPayload(question, index),
+    }));
+  }
+
   private async getSurveyOrThrow(id: string) {
     const survey = await this.prisma.survey.findUnique({ where: { id } });
     if (!survey) throw new NotFoundException('Encuesta no encontrada');
@@ -31,14 +80,17 @@ export class SurveysService {
   }
 
   async create(dto: CreateSurveyDto, authorId: string) {
+    this.assertSurveyTextFields(dto.title, dto.description);
+    const normalizedQuestions = this.validateQuestionsOrThrow(dto.questions);
+
     return this.prisma.survey.create({
       data: {
-        title: dto.title,
-        description: dto.description,
+        title: dto.title.trim(),
+        description: dto.description.trim(),
         targetRoles: dto.targetRoles as any,
         authorId,
         questions: {
-          create: dto.questions.map((q, i) => ({
+          create: normalizedQuestions.map((q, i) => ({
             text: q.text,
             type: q.type as any,
             options: q.options,
@@ -111,6 +163,7 @@ export class SurveysService {
 
   async update(id: string, dto: UpdateSurveyDto, userId: string, userRole: string) {
     const survey = await this.assertCanManageSurvey(id, userId, userRole);
+    this.assertSurveyTextFields(dto.title, dto.description);
 
     if (dto.isActive !== undefined && survey.authorId !== userId && userRole !== 'ADMIN') {
       throw new ForbiddenException('Solo el dueño de la encuesta puede cambiar su estado');
@@ -118,6 +171,8 @@ export class SurveysService {
 
     return this.prisma.$transaction(async (tx) => {
       if (dto.questions) {
+        const normalizedQuestions = this.validateQuestionsOrThrow(dto.questions as any);
+
         const existingQuestions = await tx.question.findMany({
           where: { surveyId: id },
           select: { id: true },
@@ -139,8 +194,8 @@ export class SurveysService {
           await tx.question.deleteMany({ where: { id: { in: questionIdsToDelete } } });
         }
 
-        for (let index = 0; index < dto.questions.length; index++) {
-          const question = dto.questions[index];
+        for (let index = 0; index < normalizedQuestions.length; index++) {
+          const question = normalizedQuestions[index] as any;
           const payload = {
             text: question.text,
             type: question.type as any,
@@ -163,8 +218,8 @@ export class SurveysService {
       await tx.survey.update({
         where: { id },
         data: {
-          title: dto.title,
-          description: dto.description,
+          title: dto.title?.trim(),
+          description: dto.description?.trim(),
           targetRoles: dto.targetRoles as any,
           isActive: dto.isActive,
         },

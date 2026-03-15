@@ -1,8 +1,10 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsIn,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -15,6 +17,7 @@ class UpsertQuestionDto {
   id?: string;
 
   @IsString()
+  @IsNotEmpty()
   text: string;
 
   @IsIn(['MULTIPLE_CHOICE', 'OPEN_TEXT'])
@@ -31,14 +34,18 @@ class UpsertQuestionDto {
 export class UpdateSurveyDto {
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
   title?: string;
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
   description?: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMinSize(1)
+  @IsIn(['STUDENT', 'TEACHER', 'ADMIN'], { each: true })
   targetRoles?: string[];
 
   @IsOptional()
@@ -47,6 +54,7 @@ export class UpdateSurveyDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => UpsertQuestionDto)
   questions?: UpsertQuestionDto[];

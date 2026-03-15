@@ -14,6 +14,7 @@ export default function SurveyDetailPage() {
   const [status, setStatus] = useState('');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasResponded, setHasResponded] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -29,12 +30,27 @@ export default function SurveyDetailPage() {
     })
       .then(setSurvey)
       .catch((err) => setStatus(err instanceof Error ? err.message : 'No se pudo cargar la encuesta'));
+
+    apiFetch<{ responded: boolean }>(`/surveys/${params.id}/responses/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((data) => {
+        setHasResponded(data.responded);
+        if (data.responded) {
+          setStatus('Ya respondiste esta encuesta. No puedes enviar una segunda respuesta.');
+        }
+      })
+      .catch(() => undefined);
   }, [params.id, router]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const token = getToken();
     if (!token) return router.push('/login');
+    if (hasResponded) {
+      setStatus('Ya respondiste esta encuesta. No puedes enviar una segunda respuesta.');
+      return;
+    }
     setLoading(true);
     setStatus('');
 
@@ -46,6 +62,7 @@ export default function SurveyDetailPage() {
           answers: Object.entries(answers).map(([questionId, value]) => ({ questionId, value })),
         }),
       });
+      setHasResponded(true);
       setStatus('Encuesta respondida correctamente.');
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'No se pudo enviar la respuesta');
@@ -109,8 +126,8 @@ export default function SurveyDetailPage() {
           {status ? <p className="rounded-xl bg-blue-50 px-4 py-3 text-blue-800">{status}</p> : null}
 
           <div className="flex flex-wrap gap-3">
-            <button className="button-primary rounded-xl px-5 py-3 font-medium text-white" type="submit" disabled={loading}>
-              {loading ? 'Enviando...' : 'Enviar respuestas'}
+            <button className="button-primary rounded-xl px-5 py-3 font-medium text-white disabled:opacity-60" type="submit" disabled={loading || hasResponded}>
+              {loading ? 'Enviando...' : hasResponded ? 'Respuesta ya registrada' : 'Enviar respuestas'}
             </button>
             <button type="button" onClick={() => router.push('/dashboard')} className="rounded-xl border border-[var(--border)] px-5 py-3 font-medium text-[var(--foreground)] hover:bg-[var(--primary-soft)]">
               Volver

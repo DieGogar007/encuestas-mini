@@ -19,7 +19,6 @@ async function main() {
       password: hash('admin123'),
       name: 'Administrador',
       role: Role.ADMIN,
-      mustChangePassword: false,
     },
   });
 
@@ -29,7 +28,6 @@ async function main() {
       password: hash('profesor123'),
       name: 'Prof. García',
       role: Role.TEACHER,
-      mustChangePassword: false,
     },
   });
 
@@ -39,7 +37,6 @@ async function main() {
       password: hash('estudiante123'),
       name: 'Ana López',
       role: Role.STUDENT,
-      mustChangePassword: false,
     },
   });
 
@@ -49,7 +46,6 @@ async function main() {
       password: hash('estudiante123'),
       name: 'Carlos Ruiz',
       role: Role.STUDENT,
-      mustChangePassword: false,
     },
   });
 

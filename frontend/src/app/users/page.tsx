@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getToken, getUser } from '@/lib/auth';
-import { ManagedUser, UserRole } from '@/lib/types';
+import { formatUserRole, ManagedUser, UserRole } from '@/lib/types';
 
 type DraftUser = {
   name: string;
@@ -34,6 +34,8 @@ export default function UsersPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [resetPasswordResult, setResetPasswordResult] = useState<string | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -133,7 +135,7 @@ export default function UsersPage() {
         headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify({}),
       });
-      setNotice(`Contraseña temporal regenerada: ${result.temporaryPassword}`);
+      setResetPasswordResult(result.temporaryPassword);
       await loadUsers(token);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo resetear la contraseña');
@@ -142,8 +144,36 @@ export default function UsersPage() {
     }
   }
 
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
+    <>
+      {resetPasswordResult !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-white p-6 shadow-2xl">
+            <h2 className="text-xl font-semibold text-[var(--foreground)]">Contraseña temporal generada</h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">La nueva contraseña temporal del usuario es:</p>
+            <div className="mt-4 select-all break-all rounded-xl bg-slate-100 px-4 py-3 font-mono text-lg font-bold text-[var(--foreground)]">
+              {resetPasswordResult}
+            </div>
+            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Una vez que cierres esta ventana, no podrás volvera verla.
+            </p>
+            <button
+              type="button"
+              onClick={() => setResetPasswordResult(null)}
+              className="button-primary mt-5 w-full rounded-xl px-4 py-3 font-medium text-white"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+      <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="glass-card soft-enter rounded-3xl border border-[var(--border)] p-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -164,9 +194,9 @@ export default function UsersPage() {
               <input className="w-full rounded-xl border border-[var(--border)] px-4 py-3" placeholder="Nombre completo" value={draft.name} onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))} />
               <input className="w-full rounded-xl border border-[var(--border)] px-4 py-3" placeholder="Correo institucional" value={draft.email} onChange={(e) => setDraft((prev) => ({ ...prev, email: e.target.value }))} />
               <select className="w-full rounded-xl border border-[var(--border)] px-4 py-3" value={draft.role} onChange={(e) => setDraft((prev) => ({ ...prev, role: e.target.value as UserRole }))}>
-                <option value="STUDENT">STUDENT</option>
-                <option value="TEACHER">TEACHER</option>
-                <option value="ADMIN">ADMIN</option>
+                <option value="STUDENT">{formatUserRole('STUDENT')}</option>
+                <option value="TEACHER">{formatUserRole('TEACHER')}</option>
+                <option value="ADMIN">{formatUserRole('ADMIN')}</option>
               </select>
               <input className="w-full rounded-xl border border-[var(--border)] px-4 py-3" placeholder="Contraseña temporal opcional" value={draft.temporaryPassword} onChange={(e) => setDraft((prev) => ({ ...prev, temporaryPassword: e.target.value }))} />
               <button className="button-primary w-full rounded-xl px-4 py-3 font-medium text-white" type="submit">Crear usuario</button>
@@ -176,14 +206,21 @@ export default function UsersPage() {
           <section className="glass-card rounded-3xl border border-[var(--border)] p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-xl font-semibold text-[var(--foreground)]">Usuarios registrados</h2>
-              <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 text-sm font-medium text-[var(--primary)]">{users.length} usuarios</span>
+              <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 text-sm font-medium text-[var(--primary)]">{filteredUsers.length} usuarios</span>
             </div>
+
+            <input
+              className="mb-4 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm"
+              placeholder="Buscar por nombre o correo..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
 
             {notice ? <p className="mb-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-800">{notice}</p> : null}
             {error ? <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
 
             <div className="space-y-4">
-              {users.map((managedUser) => {
+              {filteredUsers.map((managedUser) => {
                 const editing = editingUserId === managedUser.id && editingDraft;
 
                 return (
@@ -194,9 +231,9 @@ export default function UsersPage() {
                         <input className="w-full rounded-xl border border-[var(--border)] px-4 py-3" value={editingDraft.email} onChange={(e) => setEditingDraft({ ...editingDraft, email: e.target.value })} />
                         <div className="grid gap-3 sm:grid-cols-2">
                           <select className="rounded-xl border border-[var(--border)] px-4 py-3" value={editingDraft.role} onChange={(e) => setEditingDraft({ ...editingDraft, role: e.target.value as UserRole })}>
-                            <option value="STUDENT">STUDENT</option>
-                            <option value="TEACHER">TEACHER</option>
-                            <option value="ADMIN">ADMIN</option>
+                            <option value="STUDENT">{formatUserRole('STUDENT')}</option>
+                            <option value="TEACHER">{formatUserRole('TEACHER')}</option>
+                            <option value="ADMIN">{formatUserRole('ADMIN')}</option>
                           </select>
                           <button type="button" onClick={() => setEditingDraft({ ...editingDraft, isActive: !editingDraft.isActive })} className={`rounded-xl px-4 py-3 text-sm font-medium ${editingDraft.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
                             {editingDraft.isActive ? 'Activo' : 'Inactivo'}
@@ -217,7 +254,7 @@ export default function UsersPage() {
                           <h3 className="text-lg font-semibold text-[var(--foreground)]">{managedUser.name}</h3>
                           <p className="text-sm text-[var(--muted)]">{managedUser.email}</p>
                           <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                            <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 font-semibold text-[var(--primary)]">{managedUser.role}</span>
+                            <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 font-semibold text-[var(--primary)]">{formatUserRole(managedUser.role)}</span>
                             <span className={`rounded-full px-3 py-1 font-semibold ${managedUser.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
                               {managedUser.isActive ? 'Activo' : 'Inactivo'}
                             </span>
@@ -245,5 +282,6 @@ export default function UsersPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

@@ -4,7 +4,8 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getToken, getUser } from '@/lib/auth';
-import { Survey, SurveyQuestion } from '@/lib/types';
+import { validateSurveyDraft } from '@/lib/survey-validation';
+import { formatUserRole, Survey, SurveyQuestion, UserRole } from '@/lib/types';
 
 type EditableQuestion = {
   id?: string;
@@ -19,12 +20,13 @@ export default function EditSurveyPage() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [targetRoles, setTargetRoles] = useState<string[]>([]);
+  const [targetRoles, setTargetRoles] = useState<UserRole[]>([]);
   const [isActive, setIsActive] = useState(true);
   const [questions, setQuestions] = useState<EditableQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [canToggleStatus, setCanToggleStatus] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -55,7 +57,7 @@ export default function EditSurveyPage() {
       .catch((err) => setStatus(err instanceof Error ? err.message : 'No se pudo cargar la encuesta'));
   }, [params.id, router]);
 
-  function toggleRole(role: string) {
+  function toggleRole(role: UserRole) {
     setTargetRoles((prev) =>
       prev.includes(role) ? prev.filter((item) => item !== role) : [...prev, role],
     );
@@ -151,6 +153,12 @@ export default function EditSurveyPage() {
     const token = getToken();
     if (!token) return router.push('/login');
 
+    const validationError = validateSurveyDraft({ title, description, questions });
+    if (validationError) {
+      setStatus(validationError);
+      return;
+    }
+
     setLoading(true);
     setStatus('');
 
@@ -217,10 +225,10 @@ export default function EditSurveyPage() {
           <div>
             <p className="mb-3 text-sm font-medium">Público objetivo</p>
             <div className="flex flex-wrap gap-3">
-              {['STUDENT', 'TEACHER', 'ADMIN'].map((role) => (
+              {(['STUDENT', 'TEACHER', 'ADMIN'] as UserRole[]).map((role) => (
                 <label key={role} className="flex items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3">
                   <input type="checkbox" checked={targetRoles.includes(role)} onChange={() => toggleRole(role)} />
-                  <span>{role}</span>
+                  <span>{formatUserRole(role)}</span>
                 </label>
               ))}
             </div>
@@ -265,7 +273,7 @@ export default function EditSurveyPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => removeQuestion(index)}
+                        onClick={() => setQuestionToDelete(index)}
                         className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
                       >
                         Eliminar
@@ -345,6 +353,39 @@ export default function EditSurveyPage() {
             </button>
           </div>
         </form>
+
+        {questionToDelete !== null && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">
+            <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-white p-6 shadow-2xl">
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">Confirmar eliminación</h3>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Vas a eliminar la pregunta
+                <span className="font-semibold text-[var(--foreground)]"> {questionToDelete + 1}</span>.
+                Si guardas los cambios, también se eliminarán sus respuestas asociadas.
+              </p>
+
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setQuestionToDelete(null)}
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--primary-soft)]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    removeQuestion(questionToDelete);
+                    setQuestionToDelete(null);
+                  }}
+                  className="rounded-xl border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Eliminar pregunta
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

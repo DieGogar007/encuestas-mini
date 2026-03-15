@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getToken } from '@/lib/auth';
-import { SurveyResponse } from '@/lib/types';
+import { formatUserRole, SurveyResponse } from '@/lib/types';
 
 type ResultQuestion = {
   id: string;
@@ -27,6 +27,7 @@ export default function SurveyResultsPage() {
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [error, setError] = useState('');
   const [busyResponseId, setBusyResponseId] = useState('');
+  const [responseToDelete, setResponseToDelete] = useState<SurveyResponse | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -51,9 +52,6 @@ export default function SurveyResultsPage() {
   async function deleteResponse(responseId: string) {
     const token = getToken();
     if (!token) return router.push('/login');
-
-    const confirmed = window.confirm('¿Eliminar esta respuesta? Esta acción no se puede deshacer.');
-    if (!confirmed) return;
 
     try {
       setBusyResponseId(responseId);
@@ -151,11 +149,11 @@ export default function SurveyResultsPage() {
               <article key={response.id} className="rounded-2xl border border-[var(--border)] bg-white/80 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-[var(--foreground)]">
-                    <span className="font-semibold">{response.user.name}</span> ({response.user.role}) - {response.user.email}
+                    <span className="font-semibold">{response.user.name}</span> ({formatUserRole(response.user.role)}) - {response.user.email}
                   </p>
                   <button
                     type="button"
-                    onClick={() => deleteResponse(response.id)}
+                    onClick={() => setResponseToDelete(response)}
                     disabled={busyResponseId === response.id}
                     className="rounded-xl border border-red-300 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
                   >
@@ -178,6 +176,40 @@ export default function SurveyResultsPage() {
             ))}
           </div>
         </section>
+
+        {responseToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">
+            <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-white p-6 shadow-2xl">
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">Confirmar eliminación</h3>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Vas a eliminar la respuesta de
+                <span className="font-semibold text-[var(--foreground)]"> {responseToDelete.user.name}</span>.
+                Esta acción no se puede deshacer.
+              </p>
+
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setResponseToDelete(null)}
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--primary-soft)]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await deleteResponse(responseToDelete.id);
+                    setResponseToDelete(null);
+                  }}
+                  disabled={busyResponseId === responseToDelete.id}
+                  className="rounded-xl border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  {busyResponseId === responseToDelete.id ? 'Eliminando...' : 'Eliminar respuesta'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

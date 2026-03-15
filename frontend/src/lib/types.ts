@@ -1,5 +1,15 @@
 export type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT';
 
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN: 'Administrativo',
+  TEACHER: 'Docente',
+  STUDENT: 'Estudiante',
+};
+
+export function formatUserRole(role: UserRole): string {
+  return USER_ROLE_LABELS[role];
+}
+
 export interface User {
   id: string;
   email: string;

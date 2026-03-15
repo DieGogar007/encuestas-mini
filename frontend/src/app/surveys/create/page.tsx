@@ -4,6 +4,8 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getToken } from '@/lib/auth';
+import { validateSurveyDraft } from '@/lib/survey-validation';
+import { formatUserRole, UserRole } from '@/lib/types';
 
 type QuestionForm = {
   text: string;
@@ -15,15 +17,16 @@ export default function CreateSurveyPage() {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [targetRoles, setTargetRoles] = useState<string[]>(['STUDENT']);
+  const [targetRoles, setTargetRoles] = useState<UserRole[]>(['STUDENT']);
   const [questions, setQuestions] = useState<QuestionForm[]>([
     { text: '', type: 'MULTIPLE_CHOICE', options: ['Opcion 1'] },
   ]);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
 
-  function toggleRole(role: string) {
+  function toggleRole(role: UserRole) {
     setTargetRoles((prev) =>
       prev.includes(role) ? prev.filter((item) => item !== role) : [...prev, role],
     );
@@ -115,6 +118,12 @@ export default function CreateSurveyPage() {
     const token = getToken();
     if (!token) return router.push('/login');
 
+    const validationError = validateSurveyDraft({ title, description, questions });
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
     setError('');
     setStatus('');
@@ -166,10 +175,10 @@ export default function CreateSurveyPage() {
           <div>
             <p className="mb-3 text-sm font-medium">Público objetivo</p>
             <div className="flex flex-wrap gap-3">
-              {['STUDENT', 'TEACHER', 'ADMIN'].map((role) => (
+              {(['STUDENT', 'TEACHER', 'ADMIN'] as UserRole[]).map((role) => (
                 <label key={role} className="flex items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3">
                   <input type="checkbox" checked={targetRoles.includes(role)} onChange={() => toggleRole(role)} />
-                  <span>{role}</span>
+                  <span>{formatUserRole(role)}</span>
                 </label>
               ))}
             </div>
@@ -215,7 +224,7 @@ export default function CreateSurveyPage() {
                       {questions.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => removeQuestion(index)}
+                          onClick={() => setQuestionToDelete(index)}
                           className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
                         >
                           Eliminar
@@ -296,6 +305,39 @@ export default function CreateSurveyPage() {
             </button>
           </div>
         </form>
+
+        {questionToDelete !== null && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">
+            <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-white p-6 shadow-2xl">
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">Confirmar eliminación</h3>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Vas a eliminar la pregunta
+                <span className="font-semibold text-[var(--foreground)]"> {questionToDelete + 1}</span>.
+                Esta acción quitará su contenido del formulario actual.
+              </p>
+
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setQuestionToDelete(null)}
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--primary-soft)]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    removeQuestion(questionToDelete);
+                    setQuestionToDelete(null);
+                  }}
+                  className="rounded-xl border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Eliminar pregunta
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

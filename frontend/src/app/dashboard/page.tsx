@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { clearSession, getToken, getUser } from '@/lib/auth';
-import { Survey, User } from '@/lib/types';
+import { formatUserRole, Survey, User } from '@/lib/types';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Panel principal</p>
               <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">Bienvenido{user ? `, ${user.name}` : ''}</h1>
-              <p className="mt-2 text-sm text-[var(--muted)] sm:text-base">Rol actual: <span className="font-semibold text-[var(--primary)]">{user?.role}</span></p>
+              <p className="mt-2 text-sm text-[var(--muted)] sm:text-base">Rol actual: <span className="font-semibold text-[var(--primary)]">{user ? formatUserRole(user.role) : ''}</span></p>
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -162,7 +162,7 @@ export default function DashboardPage() {
 
                 <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
                   <p>Creador: {survey.author?.name ?? 'N/D'}</p>
-                  <p>Dirigida a: {survey.targetRoles.join(', ')}</p>
+                  <p>Dirigida a: {survey.targetRoles.map(formatUserRole).join(', ')}</p>
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-3">
@@ -223,7 +223,7 @@ export default function DashboardPage() {
 
                     <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
                       <p>Creador: {survey.author?.name ?? 'N/D'}</p>
-                      <p>Dirigida a: {survey.targetRoles.join(', ')}</p>
+                      <p>Dirigida a: {survey.targetRoles.map(formatUserRole).join(', ')}</p>
                     </div>
 
                     <div className="mt-5 flex flex-wrap gap-3">

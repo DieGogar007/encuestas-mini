@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsIn,
+  IsNotEmpty,
   IsString,
   ValidateNested,
   ArrayMinSize,
@@ -11,6 +12,7 @@ import {
 
 class CreateQuestionDto {
   @IsString()
+  @IsNotEmpty()
   text: string;
 
   @IsIn(['MULTIPLE_CHOICE', 'OPEN_TEXT'])
@@ -26,13 +28,16 @@ class CreateQuestionDto {
 
 export class CreateSurveyDto {
   @IsString()
+  @IsNotEmpty()
   title: string;
 
   @IsString()
+  @IsNotEmpty()
   description: string;
 
   @IsArray()
   @ArrayMinSize(1)
+  @IsIn(['STUDENT', 'TEACHER', 'ADMIN'], { each: true })
   targetRoles: string[];
 
   @IsArray()
