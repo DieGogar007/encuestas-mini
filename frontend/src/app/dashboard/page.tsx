@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { clearSession, getToken, getUser } from '@/lib/auth';
-import { formatUserRole, Survey, User } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { clearSession, getToken, getUser } from '@/services/auth';
+import { formatUserRole, Survey, User } from '@/utils/types';
 
 export default function DashboardPage() {
   const router = useRouter();

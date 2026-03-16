@@ -1,4 +1,4 @@
-import { LoginResponse, User } from './types';
+import { LoginResponse, User } from '@/utils/types';
 
 const TOKEN_KEY = 'encuestas_token';
 const USER_KEY = 'encuestas_user';

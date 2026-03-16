@@ -2,10 +2,10 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { getToken } from '@/lib/auth';
-import { validateSurveyDraft } from '@/lib/survey-validation';
-import { formatUserRole, UserRole } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { getToken } from '@/services/auth';
+import { validateSurveyDraft } from '@/utils/survey-validation';
+import { formatUserRole, UserRole } from '@/utils/types';
 
 type QuestionForm = {
   text: string;

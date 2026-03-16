@@ -2,9 +2,9 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { getToken, getUser } from '@/lib/auth';
-import { formatUserRole, ManagedUser, UserRole } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { getToken, getUser } from '@/services/auth';
+import { formatUserRole, ManagedUser, UserRole } from '@/utils/types';
 
 type DraftUser = {
   name: string;

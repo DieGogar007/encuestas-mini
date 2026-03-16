@@ -2,9 +2,9 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { getToken, getUser, saveSession } from '@/lib/auth';
-import { LoginResponse } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { getToken, getUser, saveSession } from '@/services/auth';
+import { LoginResponse } from '@/utils/types';
 
 export default function ChangePasswordPage() {
   const router = useRouter();

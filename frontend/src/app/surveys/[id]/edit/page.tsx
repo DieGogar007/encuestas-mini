@@ -2,10 +2,10 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { getToken, getUser } from '@/lib/auth';
-import { validateSurveyDraft } from '@/lib/survey-validation';
-import { formatUserRole, Survey, SurveyQuestion, UserRole } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { getToken, getUser } from '@/services/auth';
+import { validateSurveyDraft } from '@/utils/survey-validation';
+import { formatUserRole, Survey, SurveyQuestion, UserRole } from '@/utils/types';
 
 type EditableQuestion = {
   id?: string;

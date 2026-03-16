@@ -2,9 +2,9 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { getToken, getUser } from '@/lib/auth';
-import { Survey, User } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { getToken, getUser } from '@/services/auth';
+import { Survey, User } from '@/utils/types';
 
 export default function SurveyDetailPage() {
   const params = useParams<{ id: string }>();

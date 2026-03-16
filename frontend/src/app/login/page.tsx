@@ -2,9 +2,9 @@
 
 import { ChangeEvent, FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { saveSession } from '@/lib/auth';
-import { LoginResponse } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { saveSession } from '@/services/auth';
+import { LoginResponse } from '@/utils/types';
 
 export default function LoginPage() {
   const router = useRouter();

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
-import { getToken } from '@/lib/auth';
-import { formatUserRole, SurveyResponse } from '@/lib/types';
+import { apiFetch } from '@/api';
+import { getToken } from '@/services/auth';
+import { formatUserRole, SurveyResponse } from '@/utils/types';
 
 type ResultQuestion = {
   id: string;
