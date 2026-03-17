@@ -26,6 +26,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       PORT: ${BACKEND_PORT:-3001}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL_PATTERNS: ${FRONTEND_URL_PATTERNS:-}
+      CORS_ALLOW_ALL: ${CORS_ALLOW_ALL:-false}
     ports:
       - '${BACKEND_PORT:-3001}:3001'
     depends_on:

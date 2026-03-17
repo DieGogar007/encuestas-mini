@@ -60,6 +60,8 @@ Nota: en base de datos se usan los valores `ADMIN`, `TEACHER`, `STUDENT`.
 
 - Autenticacion con JWT Bearer.
 - CORS restringido por `FRONTEND_URL`.
+- Soporte para previews de Vercel si `FRONTEND_URL` apunta a `*.vercel.app`; tambien puedes definir patrones con `FRONTEND_URL_PATTERNS`.
+- Si quieres aceptar cualquier origen temporalmente, usa `CORS_ALLOW_ALL=true`.
 - El token se guarda en Local Storage del frontend (`encuestas_token`).
 - Validaciones globales con `whitelist`, `forbidNonWhitelisted` y `transform`.
 
@@ -91,6 +93,8 @@ Variables:
 - `BACKEND_PORT` (default: `3001`)
 - `FRONTEND_PORT` (default: `3000`)
 - `FRONTEND_URL` (default: `http://localhost:3000`)
+- `FRONTEND_URL_PATTERNS` (opcional, lista separada por comas, ejemplo: `https://encuestas-mini-*.vercel.app`)
+- `CORS_ALLOW_ALL` (default: `false`)
 - `NEXT_PUBLIC_API_URL` (default: `http://localhost:3001/api`)
 
 ## API principal
